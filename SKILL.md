@@ -1,6 +1,6 @@
 ---
 name: blender-motion-curves
-description: "Analyze and repair Blender animation F-Curves, especially dense HY-Motion or mocap attack/parry clips: timing, easing, jitter, rotation discontinuities, transitions, and local hand/weapon corrections. Use for Graph Editor, 曲线修动作, 批量调节奏, 去抖, 减少关键帧, or curve-based editing instead of manually keying every frame. Preserve contact, original choreography, and rig behavior. Not a replacement for rigging, retargeting, or mesh repair."
+description: "Analyze and repair Blender animation F-Curves, especially dense HY-Motion or mocap attack/parry clips: timing, jitter, rotation discontinuities, transitions, and local hand/weapon pose corrections. Use for Graph Editor, 曲线修动作, 批量调节奏, 去抖, 减少关键帧, or curve-based editing instead of manually keying every frame. Diagnose visible pose/contact defects before choosing a curve operation; preserve choreography and rig behavior. Not for building whole rigs or repairing mesh topology."
 ---
 
 # 动画曲线分析与修正
@@ -11,6 +11,7 @@ description: "Analyze and repair Blender animation F-Curves, especially dense HY
 
 - 判断问题、设计修正或评审攻击/招架：读取 [曲线诊断与修正方法](references/curve-repair.md)。
 - 用 Python 读取或修改 Blender 曲线：另外读取 [Blender 5.x API 与官方依据](references/blender-api.md)。
+- 人物有手臂交叉、穿插、握持或腕肘问题，或用户笼统要求“修这段”：读取 [姿态与接触复审](references/pose-contact-review.md)，先决定修什么，再选曲线操作。
 - 若已安装，可在新建 IK、控制器或重新绑定时结合 `blender-animation-rigging`，在评审支撑、发力和握剑姿态时结合 `human-motion-authoring`。这两个是可选配套技能；未安装时先按本技能诊断，明确说明超出曲线修正范围的问题，不要求安装其他技能。不要因使用本技能擅自扩大成重做动作或搭新系统。
 
 ## 工作范围
@@ -18,7 +19,13 @@ description: "Analyze and repair Blender animation F-Curves, especially dense HY
 1. 用户只要求研究、分析、解释或做技能时，只交付分析与方法，不写入动画。截图只能支持可见现象，不能据此声称已读取曲线。
 2. 用户已要求修正时，按授权实施，不重复要求确认；优先制作独立 Action/文件副本，保留源动作及原始帧率。查清共享 Action、slot、NLA 和约束引用后再修改。
 3. 使用现有 Blender 和兼容工具。不为本技能安装另一套 Blender/Python，不关闭用户未保存的会话。需要 API 实验时，用独立后台空场景，不能把实验脚本发进用户正在编辑的场景。
-4. 先做一个问题区间的最小修正并比较，再扩展到相似区间。没有必要时不重烘焙全骨架，不改变武器数量、动作主旨、根位移方式或骨架结构。
+4. 先做一个问题区间的最小修正并比较，再扩展到相似区间。这是内部迭代方法，不能把用户要求的动作修复擅自降格为一个容易完成的速度指标。没有必要时不重烘焙全骨架，不改变武器数量、动作主旨、根位移方式或骨架结构。
+
+## 先确定交付要解决的问题
+
+- 用户点名的缺陷优先。笼统要求修动作时，先检查整段实际角色，选出最影响动作用途的可见问题；明显穿插、错误握持或关节翻转不能被末尾缓出、平滑曲线等次要改动代替。
+- 修改前记录：`主要缺陷与证据 → 要改的输入 → 必须保留的行为 → 能证明修复的检查`。保留编排指保留动作意图、阶段与身体运动，不是保护已经错误的手臂姿态。
+- 若明确只改节奏/去抖，则遵守该范围，另报姿态问题，不擅自重做；若已授权动作修复，可修改局部目标/姿态曲线并用必要的 IK 求解，不因“曲线技能”而只处理时间轴。
 
 ## 先定位真正的动画输入
 
@@ -37,7 +44,7 @@ description: "Analyze and repair Blender animation F-Curves, especially dense HY
 2. **标记事件。** 标出预备、启动、加速、命中/招架接触、回收、脚部支撑，以及握紧/松手区间。两角色同时检查接触时间与空间；相同帧号不代表武器相交。
 3. **分类。** 区分表示跳变（Euler 绕回、四元数反号）、速度/加速度异常、动作节奏错误、姿态/IK/握持错误、坐标或 root motion 错误。不要对所有类别统一平滑。
 4. **量化。** 按真实时间计算平移/角速度，绘制目标通道与局部窗口；用最终求值的世界空间手腕、脚和武器端点复核。加速度尖峰是线索，攻击本身的快速变化可能是有意的。
-5. **提出最小方法。** 每个问题只选择必要的去跳变、局部滤波、分段时间重映射、低频偏移曲线或过渡混合。说明将改哪些通道、区间与锚点，以及要保留的接触。
+5. **提出最小方法。** 方法必须直接作用于主要缺陷。真实穿插需要改空间姿态或约束，调速只会改变它出现的时间。每个问题只选择必要的去跳变、局部滤波、分段时间重映射、低频偏移曲线或过渡混合。说明将改哪些通道、区间与锚点，以及要保留的接触。
 
 输出紧凑诊断表：`片段/时间段 | 可见问题和证据 | 原因/置信度 | 曲线方案 | 保护区间 | 验证方式`。帧号未读取时不要编造。
 
@@ -55,8 +62,11 @@ description: "Analyze and repair Blender animation F-Curves, especially dense HY
 
 ## 验收与交付
 
+- **先复审，再交付。** 逐项回答主要缺陷是否消除、保护项是否保留、是否引入新问题。任一目标仍失败时继续在副本内定位和修正，不把“已改善另一个指标”作为完成，也不等用户再截图指出同一缺陷。
+- 验证必须匹配缺陷：手/手臂穿插检查实际蒙皮后的手掌、手指和对侧肢体，骨骼线段距离仅作筛查；IK 修正同时检查 pole 连续性与肩肘腕旋转。具体证据与检查边界见 [姿态与接触复审](references/pose-contact-review.md)。
 - 使用相同帧率、镜头和播放速度对比原版/修正版；同时给正常速度和必要的接触慢放。
 - 检查全段及修改边界：脚底滑动、手部离柄、腕肘翻折、刀尖跳跃、接触提前/延迟、根位移跳变、非预期循环或末帧回弹。
 - 画曲线时注明对象、通道、单位和时间域；同时报告世界空间轨迹及峰值变化，不能只报告“删了多少键”。
-- 修正任务交付独立可编辑副本、修改区间/方法、残留问题与对比证据。研究任务交付结论和来源即可。
-- 若实际骨架、约束或源姿态不成立，明确指出曲线方法的边界，给出最小的 rig/重定向修复方向；不要声称曲线能自动补全正确动作。
+- 修正任务交付独立可编辑副本、修改区间/方法、残留问题与对比证据；需要导出时，重新载入导出件验证实际结果。研究任务交付结论和来源即可。
+- 既定验收与必要回归已通过，且没有新修改、新失败或新证据时，停止重复测试并交付；不要把内部迭代变成无关检查的无限扩展。
+- 在已授权范围内持续迭代，但不无限重试同一无效方法或擅自扩大为重做模型。若确实缺少必要源数据、握持目标或需要改变动作主旨才能继续，保留最佳副本，说明具体未完成项和依赖；失败结果只能标为部分结果，不能用“测试稿”绕过主要验收。

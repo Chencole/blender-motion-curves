@@ -12,9 +12,12 @@ This repository contains instructions and reference material for an AI coding as
 - Distinguish Euler wrapping, quaternion sign changes, IK flips, root-motion issues, and incorrect poses.
 - Plan local smoothing, time remapping, low-frequency offsets, and controlled key reduction.
 - Protect hand grips, weapon contact, and planted feet through evaluated-pose checks.
+- Prioritize the main visible defect, inspect deformed surfaces for intersections, and recheck elbow continuity after IK changes before delivering a repair.
 - Use Blender 5.x Action slots, channelbags, F-Curve modifiers, and NLA with version-aware guidance.
 
 Curve smoothing cannot replace correct rigging, retargeting, IK, or grip geometry. The workflow calls for diagnosis and the smallest appropriate correction.
+
+For a general repair request, improving an easily measured end speed does not excuse leaving an obvious pose intersection unresolved. Explicit timing-only requests retain their narrow scope. Failed candidates are revised before delivery; the skill does not promise that every animation can be solved in one attempt.
 
 ## Installation
 
@@ -64,10 +67,13 @@ Provide the actual `.blend` file and identify the target clips. Screenshots alon
 | [SKILL.md](SKILL.md) | Scope, diagnostic workflow, editing rules, and acceptance criteria |
 | [references/curve-repair.md](references/curve-repair.md) | Repair methods and an attack/parry analysis example |
 | [references/blender-api.md](references/blender-api.md) | API guidance, validation notes, and official sources |
+| [references/pose-contact-review.md](references/pose-contact-review.md) | Defect prioritization, evaluated-surface checks, IK-plane continuity, and internal iteration |
 | [agents/openai.yaml](agents/openai.yaml) | Codex display metadata and default prompt |
 
 ## Validation scope
 
 On 2026-10-08, an isolated Blender 5.2.2 LTS factory scene was used to verify Action slot/channelbag access, Smooth modifier fields, Graph Editor operator parameter names, and NLA scaling semantics. Skill structure validation passed. Check compatibility when using another Blender version.
+
+An independent read-only scenario review also covered general repair requests, timing-only requests, separated bone segments with intersecting deformed surfaces, and missing grip targets. This evaluates prioritization, scope, and delivery decisions, not an automatic repair success rate.
 
 These checks do not establish repair quality for any particular animation. See the references for methodology and links to the official Blender documentation.
