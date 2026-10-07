@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.env
+.env.*
+*.blend
+*.blend[0-9]
+*.fbx
+*.bvh
+*.mp4

@@ -1,0 +1,4 @@
+interface:
+  display_name: "动画曲线分析与修正"
+  short_description: "分析 Blender 动作曲线，分段修正节奏、抖动与衔接并保护接触"
+  default_prompt: "用 $blender-motion-curves 分析这些动作的曲线，先定位问题、标出接触区间并提出最小修改方案。"
